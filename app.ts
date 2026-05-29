@@ -1,0 +1,27 @@
+import { serve } from "@hono/node-server";
+import { Hono } from "hono";
+import { serveStatic } from "hono/bun";
+
+const app = new Hono();
+const PORT = parseInt(process.env.PORT!) || 3333;
+
+const apiRoutes = app.basePath("/api/v0");
+
+export default app;
+
+app.use("/*", serveStatic({ root: "./frontend/dist" }));
+app.get("/*", async (c) => {
+  try {
+    const indexHtml = await Bun.file("./frontend/dist/index.html").text();
+    return c.html(indexHtml);
+  } catch (error) {
+    console.error("Error reading index.html:", error);
+    return c.text("Internal Server Error", 500);
+  }
+});
+
+const server = serve({
+  port: PORT,
+  fetch: app.fetch,
+});
+console.log("Server running on port", PORT);
