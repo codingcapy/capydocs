@@ -7,6 +7,7 @@ export const documents = pgTable(
     documentId: varchar("document_id").primaryKey(),
     username: varchar("username").notNull(),
     content: varchar("content").default("active").notNull(),
+    thumbnail: varchar("thumbnail"),
     visibility: varchar("visibility").default("private").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },

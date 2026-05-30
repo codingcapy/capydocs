@@ -13,9 +13,12 @@
     "@tailwindcss/vite": "^4.3.0",
     "@tanstack/react-router": "^1.170.8",
     "@tanstack/react-router-devtools": "^1.167.0",
+    "axios": "^1.16.1",
+    "jwt-decode": "^4.0.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "tailwindcss": "^4.3.0"
+    "tailwindcss": "^4.3.0",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

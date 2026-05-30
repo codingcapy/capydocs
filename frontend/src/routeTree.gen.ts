@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
-import { Route as HomeRouteImport } from './routes/home'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DocsDocumentIdRouteImport } from './routes/docs/$documentId'
@@ -18,11 +17,6 @@ import { Route as DocsDocumentIdRouteImport } from './routes/docs/$documentId'
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HomeRoute = HomeRouteImport.update({
-  id: '/home',
-  path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -44,14 +38,12 @@ const DocsDocumentIdRoute = DocsDocumentIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
-  '/home': typeof HomeRoute
   '/signup': typeof SignupRoute
   '/docs/$documentId': typeof DocsDocumentIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
-  '/home': typeof HomeRoute
   '/signup': typeof SignupRoute
   '/docs/$documentId': typeof DocsDocumentIdRoute
 }
@@ -59,28 +51,20 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
-  '/home': typeof HomeRoute
   '/signup': typeof SignupRoute
   '/docs/$documentId': typeof DocsDocumentIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/home' | '/signup' | '/docs/$documentId'
+  fullPaths: '/' | '/dashboard' | '/signup' | '/docs/$documentId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/home' | '/signup' | '/docs/$documentId'
-  id:
-    | '__root__'
-    | '/'
-    | '/dashboard'
-    | '/home'
-    | '/signup'
-    | '/docs/$documentId'
+  to: '/' | '/dashboard' | '/signup' | '/docs/$documentId'
+  id: '__root__' | '/' | '/dashboard' | '/signup' | '/docs/$documentId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
-  HomeRoute: typeof HomeRoute
   SignupRoute: typeof SignupRoute
   DocsDocumentIdRoute: typeof DocsDocumentIdRoute
 }
@@ -92,13 +76,6 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/home': {
-      id: '/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -128,7 +105,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
-  HomeRoute: HomeRoute,
   SignupRoute: SignupRoute,
   DocsDocumentIdRoute: DocsDocumentIdRoute,
 }

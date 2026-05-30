@@ -1,9 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-import reactLogo from "../assets/react.svg";
-import viteLogo from "../assets/vite.svg";
-import heroImg from "../assets/hero.png";
-import "../App.css";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import capyness from "/capyness.png";
 
 export const Route = createFileRoute("/")({
   component: RouteComponent,
@@ -13,113 +10,36 @@ function RouteComponent() {
   const [count, setCount] = useState(0);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="flex flex-col bg-[#222222] min-h-screen text-white justify-center">
+      <div className="sm:flex mx-auto items-center justify-center bg-[#111111] px-5 py-10 rounded-2xl">
+        <div className="px-5 md:mb-40 xl:w-[500px]">
+          <img src={capyness} alt="" className="w-[50px]" />
+          <div className="text-4xl my-2">Sign in</div>
+          <div>Write content and collaborate with others</div>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p className="text-teal-500">
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        <form action="" className="flex flex-col px-5">
+          <input
+            type="email"
+            placeholder="Email"
+            className="border border-[#a0a0a0] px-3 py-2 my-1 rounded sm:w-[300px] xl:w-[400px]"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            className="border border-[#a0a0a0] px-3 py-2 my-1 rounded"
+            required
+          />
+          <div className="flex mt-10 items-center justify-end">
+            <Link to="/" className="mx-5 font-semibold text-cyan-300">
+              Create account
+            </Link>
+            <button className="bg-cyan-300 rounded-full px-6 py-2 text-[#222222]">
+              Next
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
