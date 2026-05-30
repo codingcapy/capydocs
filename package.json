@@ -14,10 +14,16 @@
   },
   "dependencies": {
     "@hono/node-server": "^2.0.4",
+    "@hono/zod-validator": "^0.8.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.20.0",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
+    "drizzle-zod": "^0.8.3",
     "hono": "^4.12.23",
-    "pg": "^8.21.0"
+    "jsonwebtoken": "^9.0.3",
+    "might-fail": "^0.7.5",
+    "pg": "^8.21.0",
+    "zod": "^4.4.3"
   }
 }
