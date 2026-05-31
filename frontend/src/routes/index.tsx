@@ -1,13 +1,43 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import capyness from "/capyness.png";
+import { useCreateUserMutation } from "../lib/api/users";
+import useAuthStore from "../store/AuthStore";
 
 export const Route = createFileRoute("/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const [count, setCount] = useState(0);
+  const { mutate: createUser, isPending: createUserPending } =
+    useCreateUserMutation();
+  const [notification, setNotification] = useState("");
+  const { loginService, authLoading, user } = useAuthStore();
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (createUserPending) return;
+    const username = (e.target as HTMLFormElement).username.value;
+    const email = (e.target as HTMLFormElement).email.value;
+    const password = (e.target as HTMLFormElement).password.value;
+    if (username.length > 32)
+      return setNotification("Username too long! Max 32 characters");
+    if (email.length > 255) return setNotification("Email too long!");
+    if (password.length > 80)
+      return setNotification("Password too long! Max character limit is 80");
+    if (password.length < 8)
+      return setNotification("Password must be at least 8 characters");
+    createUser(
+      { username, password, email },
+      {
+        onSuccess: () => {
+          loginService(email, password);
+          if (authLoading) setNotification("Loading...");
+        },
+        onError: (errorMessage) => setNotification(errorMessage.toString()),
+      },
+    );
+  }
 
   return (
     <div className="flex flex-col bg-[#222222] min-h-screen text-white justify-center">
