@@ -3,8 +3,26 @@ import { Hono } from "hono";
 import { serveStatic } from "hono/bun";
 import { usersRouter } from "./routes/users";
 import { userRouter } from "./routes/user";
+import { logger } from "hono/logger";
+import { compress } from "hono/compress";
+import { secureHeaders } from "hono/secure-headers";
+import { cors } from "hono/cors";
 
 const app = new Hono();
+
+app.use("*", logger());
+app.use("*", compress());
+app.use("*", secureHeaders());
+app.use(
+  "*",
+  cors({
+    origin: ["http://localhost:5173", "https://visioncoding.up.railway.app"],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  }),
+);
+
 const PORT = parseInt(process.env.PORT!) || 3333;
 
 const apiRoutes = app
