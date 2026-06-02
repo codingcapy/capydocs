@@ -12,7 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DocsDocumentIdRouteImport } from './routes/docs/$documentId'
+import { Route as DocsPathRouteImport } from './routes/docs/$path'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -29,9 +29,9 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DocsDocumentIdRoute = DocsDocumentIdRouteImport.update({
-  id: '/docs/$documentId',
-  path: '/docs/$documentId',
+const DocsPathRoute = DocsPathRouteImport.update({
+  id: '/docs/$path',
+  path: '/docs/$path',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -39,34 +39,34 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/signup': typeof SignupRoute
-  '/docs/$documentId': typeof DocsDocumentIdRoute
+  '/docs/$path': typeof DocsPathRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/signup': typeof SignupRoute
-  '/docs/$documentId': typeof DocsDocumentIdRoute
+  '/docs/$path': typeof DocsPathRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/signup': typeof SignupRoute
-  '/docs/$documentId': typeof DocsDocumentIdRoute
+  '/docs/$path': typeof DocsPathRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/signup' | '/docs/$documentId'
+  fullPaths: '/' | '/dashboard' | '/signup' | '/docs/$path'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/signup' | '/docs/$documentId'
-  id: '__root__' | '/' | '/dashboard' | '/signup' | '/docs/$documentId'
+  to: '/' | '/dashboard' | '/signup' | '/docs/$path'
+  id: '__root__' | '/' | '/dashboard' | '/signup' | '/docs/$path'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
   SignupRoute: typeof SignupRoute
-  DocsDocumentIdRoute: typeof DocsDocumentIdRoute
+  DocsPathRoute: typeof DocsPathRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -92,11 +92,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/docs/$documentId': {
-      id: '/docs/$documentId'
-      path: '/docs/$documentId'
-      fullPath: '/docs/$documentId'
-      preLoaderRoute: typeof DocsDocumentIdRouteImport
+    '/docs/$path': {
+      id: '/docs/$path'
+      path: '/docs/$path'
+      fullPath: '/docs/$path'
+      preLoaderRoute: typeof DocsPathRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -106,7 +106,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
   SignupRoute: SignupRoute,
-  DocsDocumentIdRoute: DocsDocumentIdRoute,
+  DocsPathRoute: DocsPathRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -7,6 +7,7 @@ import { logger } from "hono/logger";
 import { compress } from "hono/compress";
 import { secureHeaders } from "hono/secure-headers";
 import { cors } from "hono/cors";
+import { documentsRouter } from "./routes/documents";
 
 const app = new Hono();
 
@@ -28,7 +29,8 @@ const PORT = parseInt(process.env.PORT!) || 3333;
 const apiRoutes = app
   .basePath("/api/v0")
   .route("/users", usersRouter)
-  .route("/user", userRouter);
+  .route("/user", userRouter)
+  .route("/documents", documentsRouter);
 
 export type ApiRoutes = typeof apiRoutes;
 export default app;
