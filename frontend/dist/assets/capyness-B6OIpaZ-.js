@@ -1,0 +1,1 @@
+var e=`/capyness.png`;export{e as t};

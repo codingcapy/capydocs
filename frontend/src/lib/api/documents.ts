@@ -5,7 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { getSession } from "../utils";
-import { client, type ArgumentTypes } from "./client";
+import { client, type ArgumentTypes, type ExtractData } from "./client";
 
 type CreateDocumentArgs = ArgumentTypes<
   typeof client.api.v0.documents.$post
@@ -14,6 +14,26 @@ type CreateDocumentArgs = ArgumentTypes<
 export type DocumentsCursor = {
   documentId: number;
 } | null;
+
+export type SerializeDocument = ExtractData<
+  Awaited<
+    ReturnType<(typeof client.api.v0.documents.document)[":path"]["$get"]>
+  >
+>["document"];
+
+type UpdateDocumentArgs = ArgumentTypes<
+  typeof client.api.v0.documents.update.title.$post
+>[0]["json"];
+
+export function mapSerializedDocumentToSchema(
+  SerializedDocument: SerializeDocument,
+) {
+  return {
+    ...SerializedDocument,
+    createdAt: new Date(SerializedDocument.createdAt),
+    editedAt: new Date(SerializedDocument.editedAt),
+  };
+}
 
 async function createDocument(args: CreateDocumentArgs) {
   const token = getSession();
@@ -102,7 +122,7 @@ export const getDocumentsInfiniteQueryOptions = () =>
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   });
 
-async function getDocumentById(path: number) {
+async function getDocumentById(path: string) {
   const token = getSession();
   const res = await client.api.v0.documents.document[":path"].$get(
     {
@@ -117,14 +137,66 @@ async function getDocumentById(path: number) {
       : undefined,
   );
   if (!res.ok) {
-    throw new Error("Error getting post by id");
+    throw new Error("Error getting document by id");
   }
   const { document } = await res.json();
-  return document;
+  return mapSerializedDocumentToSchema(document);
 }
 
-export const getPostByIdQueryOptions = (path: number) =>
+export const getDocumentByIdQueryOptions = (path: string) =>
   queryOptions({
     queryKey: ["document"],
     queryFn: () => getDocumentById(path),
   });
+
+async function UpdateDocumentTitle(args: UpdateDocumentArgs) {
+  const token = getSession();
+  const res = await client.api.v0.documents.update.title.$post(
+    { json: args },
+    token
+      ? {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      : undefined,
+  );
+  if (!res.ok) {
+    let errorMessage =
+      "There was an issue updating your document title :( We'll look into it ASAP!";
+    try {
+      const errorResponse = await res.json();
+      if (
+        errorResponse &&
+        typeof errorResponse === "object" &&
+        "message" in errorResponse
+      ) {
+        errorMessage = String(errorResponse.message);
+      }
+    } catch (error) {
+      console.error("Failed to parse error response:", error);
+    }
+    throw new Error(errorMessage);
+  }
+  const result = await res.json();
+  return mapSerializedDocumentToSchema(result.document);
+}
+
+export const useUpdateDocumentTitleMutation = (
+  onError?: (message: string) => void,
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: UpdateDocumentTitle,
+    onSettled: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["document"],
+      });
+    },
+    onError: (error) => {
+      if (onError) {
+        onError(error.message);
+      }
+    },
+  });
+};

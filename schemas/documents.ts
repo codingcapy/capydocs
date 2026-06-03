@@ -26,4 +26,4 @@ export const documents = pgTable(
   (table) => [index("documents_user_id_idx").on(table.userId)],
 );
 
-export type User = InferSelectModel<typeof documents>;
+export type Document = InferSelectModel<typeof documents>;

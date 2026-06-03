@@ -35,7 +35,7 @@ export function Header() {
         {user && user.username}
       </div>
       {user && showMenu && (
-        <div className="absolute px-3 top-[65px] right-[40px] flex flex-col shadow-lg rounded-2xl w-[300px] h-[300px] border border-[#d0d0d0] text-center ">
+        <div className="absolute px-3 top-[65px] right-[40px] flex flex-col shadow-lg rounded-2xl w-[300px] h-[300px] border border-[#d0d0d0] text-center bg-[#edf0f5]">
           <div className="mx-auto">
             <Link to="/" onClick={() => setShowMenu(false)}>
               <div className="py-2 font-semibold">{user.email}</div>
