@@ -7,6 +7,8 @@ import {
   getDocumentsInfiniteQueryOptions,
   useCreateDocumentMutation,
 } from "../lib/api/documents";
+import { FaEllipsisVertical } from "react-icons/fa6";
+import { DocumentThumbnail } from "../components/DocumentThumbnail";
 
 export const Route = createFileRoute("/dashboard")({
   component: RouteComponent,
@@ -74,18 +76,7 @@ function RouteComponent() {
         ) : documents ? (
           <div className="grid grid-cols-5">
             {documents.map((d) => (
-              <Link
-                to="/docs/$path"
-                params={{ path: d.path }}
-                key={d.documentId}
-                className="py-6"
-              >
-                <div className="relative border border-[#a0a0a0] bg-white w-[210px] h-[260px] cursor-pointer hover:border-cyan-500">
-                  <div className="absolute bottom-0 left-0 w-full border-t border-t-[#a0a0a0] h-[75px] px-5 py-3 truncate">
-                    <div>{d.title}</div>
-                  </div>
-                </div>
-              </Link>
+              <DocumentThumbnail key={d.documentId} d={d} />
             ))}
             {isFetchingNextDocumentsPage && (
               <div className="py-3 text-sm text-[#a0a0a0]">Loading more...</div>

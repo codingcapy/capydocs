@@ -20,6 +20,10 @@ const updateDocumentTitleSchema = z.object({
   title: z.string(),
 });
 
+const deleteDocumentSchema = z.object({
+  documentId: z.number(),
+});
+
 const getDocumentsSchema = z.object({
   cursor: z.coerce.number().optional(),
   limit: z.coerce.number().min(1).max(50).default(10),
@@ -141,4 +145,38 @@ export const documentsRouter = new Hono()
         });
       return c.json({ document: documentUpdateResult[0] });
     },
-  );
+  )
+  .post("/delete", zValidator("json", deleteDocumentSchema), async (c) => {
+    const deleteValues = c.req.valid("json");
+    const decodedUser = requireUser(c);
+    const { result: documentQueryResult, error: documentQueryError } =
+      await mightFail(
+        db
+          .select()
+          .from(documentsTable)
+          .where(eq(documentsTable.documentId, deleteValues.documentId)),
+      );
+    if (documentQueryError)
+      throw new HTTPException(500, {
+        message: "error fetching document",
+        cause: documentQueryError,
+      });
+    const document = documentQueryResult[0];
+    if (!document)
+      throw new HTTPException(404, { message: "Document not found" });
+    if (document.userId !== decodedUser.id)
+      throw new HTTPException(401, { message: "Unauthorized" });
+    const { result: documentDeleteResult, error: documentDeleteError } =
+      await mightFail(
+        db
+          .delete(documentsTable)
+          .where(eq(documentsTable.documentId, deleteValues.documentId))
+          .returning(),
+      );
+    if (documentDeleteError)
+      throw new HTTPException(500, {
+        message: "error deleting document",
+        cause: documentQueryError,
+      });
+    return c.json({ document: documentDeleteResult[0] });
+  });

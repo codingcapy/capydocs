@@ -1,10 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { DocumentHeader } from "../../components/DocumentHeader";
 import { DocEditor } from "../../components/DocEditor";
-import {
-  getDocumentByIdQueryOptions,
-  useUpdateDocumentTitleMutation,
-} from "../../lib/api/documents";
+import { getDocumentByIdQueryOptions } from "../../lib/api/documents";
 import { useQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/docs/$path")({

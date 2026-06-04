@@ -15,15 +15,19 @@ export type DocumentsCursor = {
   documentId: number;
 } | null;
 
+type UpdateDocumentTitleArgs = ArgumentTypes<
+  typeof client.api.v0.documents.update.title.$post
+>[0]["json"];
+
+type deleteDocumentArgs = ArgumentTypes<
+  typeof client.api.v0.documents.delete.$post
+>[0]["json"];
+
 export type SerializeDocument = ExtractData<
   Awaited<
     ReturnType<(typeof client.api.v0.documents.document)[":path"]["$get"]>
   >
 >["document"];
-
-type UpdateDocumentArgs = ArgumentTypes<
-  typeof client.api.v0.documents.update.title.$post
->[0]["json"];
 
 export function mapSerializedDocumentToSchema(
   SerializedDocument: SerializeDocument,
@@ -109,7 +113,7 @@ async function getDocuments(cursor?: number) {
   }
   const data = await res.json();
   return {
-    documents: data.documents,
+    documents: data.documents.map(mapSerializedDocumentToSchema),
     nextCursor: data.nextCursor,
   };
 }
@@ -149,7 +153,7 @@ export const getDocumentByIdQueryOptions = (path: string) =>
     queryFn: () => getDocumentById(path),
   });
 
-async function UpdateDocumentTitle(args: UpdateDocumentArgs) {
+async function UpdateDocumentTitle(args: UpdateDocumentTitleArgs) {
   const token = getSession();
   const res = await client.api.v0.documents.update.title.$post(
     { json: args },
@@ -192,6 +196,9 @@ export const useUpdateDocumentTitleMutation = (
       queryClient.invalidateQueries({
         queryKey: ["document"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["documents"],
+      });
     },
     onError: (error) => {
       if (onError) {
@@ -200,3 +207,56 @@ export const useUpdateDocumentTitleMutation = (
     },
   });
 };
+
+async function deleteDocument(args: deleteDocumentArgs) {
+  const token = getSession();
+  const res = await client.api.v0.documents.delete.$post(
+    { json: args },
+    token
+      ? {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      : undefined,
+  );
+  if (!res.ok) {
+    let errorMessage =
+      "There was an issue deleting your document title :( We'll look into it ASAP!";
+    try {
+      const errorResponse = await res.json();
+      if (
+        errorResponse &&
+        typeof errorResponse === "object" &&
+        "message" in errorResponse
+      ) {
+        errorMessage = String(errorResponse.message);
+      }
+    } catch (error) {
+      console.error("Failed to parse error response:", error);
+    }
+    throw new Error(errorMessage);
+  }
+  const result = await res.json();
+  return result;
+}
+
+export function useDeleteDocumentMutation(onError?: (message: string) => void) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteDocument,
+    onSettled: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["document"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["documents"],
+      });
+    },
+    onError: (error) => {
+      if (onError) {
+        onError(error.message);
+      }
+    },
+  });
+}
