@@ -8,6 +8,8 @@ import { compress } from "hono/compress";
 import { secureHeaders } from "hono/secure-headers";
 import { cors } from "hono/cors";
 import { documentsRouter } from "./routes/documents";
+import { Server as SocketServer } from "socket.io";
+import { attachSocketEventListeners } from "./ws";
 
 const app = new Hono();
 
@@ -50,4 +52,16 @@ const server = serve({
   port: PORT,
   fetch: app.fetch,
 });
+
+const io = new SocketServer(server, {
+  path: "/ws",
+  serveClient: false,
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
+
+attachSocketEventListeners(io);
+
 console.log("Server running on port", PORT);

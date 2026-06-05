@@ -25,7 +25,7 @@ function RouteComponent() {
         ) : documentError ? (
           <div>Error loading content</div>
         ) : document ? (
-          <DocEditor />
+          <DocEditor document={document} />
         ) : (
           <div></div>
         )}

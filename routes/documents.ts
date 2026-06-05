@@ -20,6 +20,11 @@ const updateDocumentTitleSchema = z.object({
   title: z.string(),
 });
 
+const updateDocumentContentSchema = z.object({
+  documentId: z.number(),
+  content: z.string(),
+});
+
 const deleteDocumentSchema = z.object({
   documentId: z.number(),
 });
@@ -134,7 +139,7 @@ export const documentsRouter = new Hono()
         await mightFail(
           db
             .update(documentsTable)
-            .set(updateValues)
+            .set({ title: updateValues.title })
             .where(eq(documentsTable.documentId, updateValues.documentId))
             .returning(),
         );
@@ -179,4 +184,46 @@ export const documentsRouter = new Hono()
         cause: documentQueryError,
       });
     return c.json({ document: documentDeleteResult[0] });
-  });
+  })
+  .post(
+    "/update/content",
+    zValidator("json", updateDocumentContentSchema),
+    async (c) => {
+      const updateValues = c.req.valid("json");
+      const potentialUser = optionalUser(c);
+      const { result: documentQueryResult, error: documentQueryError } =
+        await mightFail(
+          db
+            .select()
+            .from(documentsTable)
+            .where(eq(documentsTable.documentId, updateValues.documentId)),
+        );
+      if (documentQueryError)
+        throw new HTTPException(500, {
+          message: "error fetching document",
+          cause: documentQueryError,
+        });
+      const document = documentQueryResult[0];
+      if (!document)
+        throw new HTTPException(404, { message: "Document not found" });
+      if (
+        document.visibility === "private" &&
+        document.userId !== potentialUser?.id
+      )
+        throw new HTTPException(401, { message: "Unauthorized" });
+      const { result: documentUpdateResult, error: documentUpdateError } =
+        await mightFail(
+          db
+            .update(documentsTable)
+            .set({ content: updateValues.content })
+            .where(eq(documentsTable.documentId, updateValues.documentId))
+            .returning(),
+        );
+      if (documentUpdateError)
+        throw new HTTPException(500, {
+          message: "error deleting document",
+          cause: documentUpdateError,
+        });
+      return c.json({ document: documentUpdateResult[0] });
+    },
+  );
