@@ -96,7 +96,10 @@ export function DocumentThumbnail(props: { d: Document }) {
             <FaRegTrashAlt />
             <div className="ml-2 cursor-pointer">Remove</div>
           </div>
-          <div className="flex items-center px-3 py-1 hover:bg-[#d0d0d0]">
+          <div
+            onClick={() => window.open(`/docs/${props.d.path}`, "_blank")}
+            className="flex items-center px-3 py-1 hover:bg-[#d0d0d0]"
+          >
             <RxOpenInNewWindow />
             <div className="ml-2 cursor-pointer">Open in new tab</div>
           </div>
@@ -112,7 +115,7 @@ export function DocumentThumbnail(props: { d: Document }) {
             type="text"
             value={titleContent}
             onChange={(e) => setTitleContent(e.target.value)}
-            className="border w-full my-5"
+            className="pl-1 border w-full my-5"
           />
           <div className="my-5 flex justify-end">
             <div

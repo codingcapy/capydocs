@@ -6,6 +6,8 @@ import { MdLogout } from "react-icons/md";
 import capypaul from "/capypaul01.jpg";
 import type { Document } from "@server/schemas/documents";
 import {
+  getDocumentsInfiniteQueryOptions,
+  useCreateDocumentMutation,
   useDeleteDocumentMutation,
   useUpdateDocumentTitleMutation,
 } from "../lib/api/documents";
@@ -14,6 +16,9 @@ import { FaRegFolder } from "react-icons/fa";
 import { MdContentCopy } from "react-icons/md";
 import { MdOutlineModeEdit } from "react-icons/md";
 import { FaRegTrashAlt } from "react-icons/fa";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { IoCloseOutline } from "react-icons/io5";
+import { DocumentThumbnailSmall } from "./DocumentThumbnailSmall";
 
 type MenuMode = "none" | "user" | "file";
 
@@ -30,6 +35,37 @@ export function DocumentHeader(props: { document: Document | undefined }) {
   const { mutate: deleteDocument, isPending: deleteDocumentPending } =
     useDeleteDocumentMutation();
   const navigate = useNavigate();
+  const { mutate: createDocument, isPending: createDocumentPending } =
+    useCreateDocumentMutation();
+  const [notification, setNotification] = useState("");
+  const titleInputRef = useRef<HTMLInputElement | null>(null);
+  const documentsSentinelRef = useRef<HTMLDivElement | null>(null);
+  const {
+    data: documentsData,
+    isLoading: documentsLoading,
+    error: documentsError,
+    fetchNextPage: fetchNextDocumentsPage,
+    hasNextPage: hasNextDocumentsPage,
+    isFetchingNextPage: isFetchingNextDocumentsPage,
+  } = useInfiniteQuery({
+    ...getDocumentsInfiniteQueryOptions(),
+  });
+  const documents = documentsData?.pages.flatMap((p) => p.documents);
+  const [openMode, setOpenMode] = useState(false);
+
+  function handleSubmitCreate() {
+    if (createDocumentPending) return;
+    createDocument(
+      {
+        title: "Untitled",
+        content: "",
+      },
+      {
+        onSuccess: (data) => navigate({ to: `/docs/${data.path}` }),
+        onError: () => setNotification("yikes"),
+      },
+    );
+  }
 
   function handleSubmitUpdateTitle() {
     if (updateTitlePending || !props.document) return;
@@ -49,11 +85,26 @@ export function DocumentHeader(props: { document: Document | undefined }) {
     );
   }
 
+  function handleSubmitCopy() {
+    if (createDocumentPending || !props.document) return;
+    createDocument(
+      {
+        title: `${titleContent} - copy`,
+        content: props.document.content,
+      },
+      {
+        onSuccess: (data) => navigate({ to: `/docs/${data.path}` }),
+        onError: () => setNotification("yikes"),
+      },
+    );
+  }
+
   useEffect(() => {
     if (props.document) {
+      isFirstRender.current = true;
       setTitleContent(props.document.title);
     }
-  }, [props.document?.title]);
+  }, [props.document?.documentId]);
 
   useEffect(() => {
     if (isFirstRender.current) {
@@ -78,7 +129,7 @@ export function DocumentHeader(props: { document: Document | undefined }) {
   return (
     <div
       ref={menuRef}
-      className="fixed top-0 left-0 w-screen flex justify-between items-center px-5 py-3 bg-white"
+      className="fixed top-0 left-0 w-screen flex justify-between items-center px-5 py-3 bg-white z-10"
     >
       <div className="flex">
         <Link to="/dashboard" className="flex items-center">
@@ -91,6 +142,7 @@ export function DocumentHeader(props: { document: Document | undefined }) {
               value={titleContent}
               onChange={(e) => setTitleContent(e.target.value)}
               className="hover:outline-1 focus:outline-1 w-full"
+              ref={titleInputRef}
             />
           </div>
           <div className="flex">
@@ -142,30 +194,78 @@ export function DocumentHeader(props: { document: Document | undefined }) {
       )}
       {user && menuMode === "file" && (
         <div className="absolute top-[65px] left-[70px] w-[300px] h-[180px] bg-white border border-[#d0d0d0] shadow-lg py-2 px-[1px]">
-          <div className="flex items-center px-3 py-1 hover:bg-[#d0d0d0]">
+          <div className="flex items-center px-3 py-1 hover:bg-[#d0d0d0] cursor-pointer">
             <FaFileAlt />
-            <div className="ml-2 cursor-pointer">New</div>
+            <div onClick={handleSubmitCreate} className="ml-2">
+              New
+            </div>
           </div>
-          <div className="flex items-center px-3 py-1 hover:bg-[#d0d0d0]">
+          <div
+            onClick={() => setOpenMode(true)}
+            className="flex items-center px-3 py-1 hover:bg-[#d0d0d0] cursor-pointer"
+          >
             <FaRegFolder />
-            <div className="ml-2 cursor-pointer">Open</div>
+            <div className="ml-2">Open</div>
           </div>
-          <div className="flex items-center px-3 py-1 hover:bg-[#d0d0d0]">
+          <div
+            onClick={handleSubmitCopy}
+            className="flex items-center px-3 py-1 hover:bg-[#d0d0d0] cursor-pointer"
+          >
             <MdContentCopy />
-            <div className="ml-2 cursor-pointer">Make a copy</div>
+            <div className="ml-2">Make a copy</div>
           </div>
-          <div className="flex items-center px-3 py-1 hover:bg-[#d0d0d0]">
+          <div
+            onClick={() => {
+              setMenuMode("none");
+              setTimeout(() => titleInputRef.current?.focus(), 0);
+            }}
+            className="flex items-center px-3 py-1 hover:bg-[#d0d0d0] cursor-pointer"
+          >
             <MdOutlineModeEdit />
-            <div className="ml-2 cursor-pointer">Rename</div>
+            <div className="ml-2">Rename</div>
           </div>
           <div
             onClick={handleSubmitDelete}
-            className="flex items-center px-3 py-1 hover:bg-[#d0d0d0]"
+            className="flex items-center px-3 py-1 hover:bg-[#d0d0d0] cursor-pointer"
           >
             <FaRegTrashAlt />
-            <div className="ml-2 cursor-pointer">Move to trash</div>
+            <div className="ml-2">Move to trash</div>
           </div>
         </div>
+      )}
+      {openMode && (
+        <div
+          className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded shadow-lg w-[65%] z-100`}
+        >
+          <div className="flex justify-between items-center pb-5">
+            <div className="font-semibold">Open a file</div>
+            <div onClick={() => setOpenMode(false)} className="cursor-pointer">
+              <IoCloseOutline size={25} />
+            </div>
+          </div>
+          {documentsLoading ? (
+            <div>Loading documents...</div>
+          ) : documentsError ? (
+            <div>Error loading documents</div>
+          ) : documents ? (
+            <div className="grid grid-cols-5 gap-0 bg-white">
+              {documents.map((d) => (
+                <DocumentThumbnailSmall key={d.documentId} d={d} />
+              ))}
+              {isFetchingNextDocumentsPage && (
+                <div className="py-3 text-sm text-[#a0a0a0]">
+                  Loading more...
+                </div>
+              )}
+              <div className="h-[50px]" ref={documentsSentinelRef} />
+            </div>
+          ) : (
+            <div></div>
+          )}
+        </div>
+      )}
+      {openMode && (
+        <div className="fixed inset-0 bg-black opacity-50 z-90"></div>
       )}
     </div>
   );
