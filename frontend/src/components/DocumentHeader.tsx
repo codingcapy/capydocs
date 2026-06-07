@@ -19,10 +19,21 @@ import { FaRegTrashAlt } from "react-icons/fa";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { IoCloseOutline } from "react-icons/io5";
 import { DocumentThumbnailSmall } from "./DocumentThumbnailSmall";
+import type { PresenceUser } from "../hooks/usePresence";
 
 type MenuMode = "none" | "user" | "file";
 
-export function DocumentHeader(props: { document: Document | undefined }) {
+function avatarColor(userId: string) {
+  const colors = [
+    "#f87171", "#fb923c", "#fbbf24", "#34d399",
+    "#38bdf8", "#818cf8", "#e879f9", "#a3e635",
+  ];
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+}
+
+export function DocumentHeader(props: { document: Document | undefined; presentUsers?: PresenceUser[] }) {
   const { logoutService, user } = useAuthStore();
   const [menuMode, setMenuMode] = useState<MenuMode>("none");
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -161,11 +172,32 @@ export function DocumentHeader(props: { document: Document | undefined }) {
           </div>
         </div>
       </div>
-      <div
-        onClick={() => setMenuMode("user")}
-        className="pr-5 font-bold cursor-pointer"
-      >
-        {user && user.username}
+      <div className="flex items-center gap-3 pr-5">
+        {props.presentUsers && props.presentUsers.length > 0 && (
+          <div className="flex items-center -space-x-2">
+            {props.presentUsers.slice(0, 5).map((u) => (
+              <div
+                key={u.socketId}
+                title={u.username}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ring-2 ring-white select-none"
+                style={{ backgroundColor: avatarColor(u.userId) }}
+              >
+                {u.username.charAt(0).toUpperCase()}
+              </div>
+            ))}
+            {props.presentUsers.length > 5 && (
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-400 text-white text-xs font-bold ring-2 ring-white">
+                +{props.presentUsers.length - 5}
+              </div>
+            )}
+          </div>
+        )}
+        <div
+          onClick={() => setMenuMode("user")}
+          className="font-bold cursor-pointer"
+        >
+          {user && user.username}
+        </div>
       </div>
       {user && menuMode === "user" && (
         <div className="absolute px-3 top-[65px] right-[40px] flex flex-col shadow-lg rounded-2xl w-[300px] h-[300px] border border-[#d0d0d0] text-center bg-[#edf0f5]">
