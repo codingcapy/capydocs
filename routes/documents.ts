@@ -25,6 +25,11 @@ const updateDocumentContentSchema = z.object({
   content: z.string(),
 });
 
+const updateDocumentContentVisibility = z.object({
+  documentId: z.number(),
+  visibility: z.string(),
+});
+
 const deleteDocumentSchema = z.object({
   documentId: z.number(),
 });
@@ -223,6 +228,45 @@ export const documentsRouter = new Hono()
         throw new HTTPException(500, {
           message: "error deleting document",
           cause: documentUpdateError,
+        });
+      return c.json({ document: documentUpdateResult[0] });
+    },
+  )
+  .post(
+    "/update/visibility",
+    zValidator("json", updateDocumentContentVisibility),
+    async (c) => {
+      const updateValues = c.req.valid("json");
+      const decodedUser = requireUser(c);
+      const { result: documentQueryResult, error: documentQueryError } =
+        await mightFail(
+          db
+            .select()
+            .from(documentsTable)
+            .where(eq(documentsTable.documentId, updateValues.documentId)),
+        );
+      if (documentQueryError)
+        throw new HTTPException(500, {
+          message: "error fetching document",
+          cause: documentQueryError,
+        });
+      const document = documentQueryResult[0];
+      if (!document)
+        throw new HTTPException(404, { message: "Document not found" });
+      if (document.userId !== decodedUser.id)
+        throw new HTTPException(401, { message: "Unauthorized" });
+      const { result: documentUpdateResult, error: documentUpdateError } =
+        await mightFail(
+          db
+            .update(documentsTable)
+            .set({ visibility: updateValues.visibility })
+            .where(eq(documentsTable.documentId, updateValues.documentId))
+            .returning(),
+        );
+      if (documentUpdateError)
+        throw new HTTPException(500, {
+          message: "error updating document",
+          cause: documentQueryError,
         });
       return c.json({ document: documentUpdateResult[0] });
     },

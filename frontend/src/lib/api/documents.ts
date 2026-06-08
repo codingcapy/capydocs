@@ -23,6 +23,10 @@ type UpdateDocumentContentArgs = ArgumentTypes<
   typeof client.api.v0.documents.update.content.$post
 >[0]["json"];
 
+type UpdateDocumentVisibilityArgs = ArgumentTypes<
+  typeof client.api.v0.documents.update.visibility.$post
+>[0]["json"];
+
 type deleteDocumentArgs = ArgumentTypes<
   typeof client.api.v0.documents.delete.$post
 >[0]["json"];
@@ -304,6 +308,61 @@ export const useUpdateDocumentContentMutation = (
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: UpdateDocumentContent,
+    onSettled: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["document"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["documents"],
+      });
+    },
+    onError: (error) => {
+      if (onError) {
+        onError(error.message);
+      }
+    },
+  });
+};
+
+async function UpdateDocumentVisibility(args: UpdateDocumentVisibilityArgs) {
+  const token = getSession();
+  const res = await client.api.v0.documents.update.visibility.$post(
+    { json: args },
+    token
+      ? {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      : undefined,
+  );
+  if (!res.ok) {
+    let errorMessage =
+      "There was an issue updating your document visibility :( We'll look into it ASAP!";
+    try {
+      const errorResponse = await res.json();
+      if (
+        errorResponse &&
+        typeof errorResponse === "object" &&
+        "message" in errorResponse
+      ) {
+        errorMessage = String(errorResponse.message);
+      }
+    } catch (error) {
+      console.error("Failed to parse error response:", error);
+    }
+    throw new Error(errorMessage);
+  }
+  const result = await res.json();
+  return mapSerializedDocumentToSchema(result.document);
+}
+
+export const useUpdateDocumentVisibilityMutation = (
+  onError?: (message: string) => void,
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: UpdateDocumentVisibility,
     onSettled: (data) => {
       queryClient.invalidateQueries({
         queryKey: ["document"],
