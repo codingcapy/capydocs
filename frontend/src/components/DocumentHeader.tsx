@@ -20,20 +20,35 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { IoCloseOutline } from "react-icons/io5";
 import { DocumentThumbnailSmall } from "./DocumentThumbnailSmall";
 import type { PresenceUser } from "../hooks/usePresence";
+import { MdLockOutline } from "react-icons/md";
+import { IoEarth } from "react-icons/io5";
+import { IoMdLink } from "react-icons/io";
+import { ShareModal } from "./ShareModal";
 
 type MenuMode = "none" | "user" | "file";
+export type PopupMode = "none" | "open" | "share";
 
 function avatarColor(userId: string) {
   const colors = [
-    "#f87171", "#fb923c", "#fbbf24", "#34d399",
-    "#38bdf8", "#818cf8", "#e879f9", "#a3e635",
+    "#f87171",
+    "#fb923c",
+    "#fbbf24",
+    "#34d399",
+    "#38bdf8",
+    "#818cf8",
+    "#e879f9",
+    "#a3e635",
   ];
   let hash = 0;
-  for (let i = 0; i < userId.length; i++) hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < userId.length; i++)
+    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
   return colors[Math.abs(hash) % colors.length];
 }
 
-export function DocumentHeader(props: { document: Document | undefined; presentUsers?: PresenceUser[] }) {
+export function DocumentHeader(props: {
+  document: Document | undefined;
+  presentUsers?: PresenceUser[];
+}) {
   const { logoutService, user } = useAuthStore();
   const [menuMode, setMenuMode] = useState<MenuMode>("none");
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -62,7 +77,7 @@ export function DocumentHeader(props: { document: Document | undefined; presentU
     ...getDocumentsInfiniteQueryOptions(),
   });
   const documents = documentsData?.pages.flatMap((p) => p.documents);
-  const [openMode, setOpenMode] = useState(false);
+  const [popupMode, setPopupMode] = useState<PopupMode>("none");
 
   function handleSubmitCreate() {
     if (createDocumentPending) return;
@@ -193,6 +208,13 @@ export function DocumentHeader(props: { document: Document | undefined; presentU
           </div>
         )}
         <div
+          onClick={() => setPopupMode("share")}
+          className="bg-cyan-200 px-5 py-2 rounded-full flex items-center cursor-pointer"
+        >
+          <MdLockOutline />
+          <div className="ml-2 font-semibold">Share</div>
+        </div>
+        <div
           onClick={() => setMenuMode("user")}
           className="font-bold cursor-pointer"
         >
@@ -233,7 +255,7 @@ export function DocumentHeader(props: { document: Document | undefined; presentU
             </div>
           </div>
           <div
-            onClick={() => setOpenMode(true)}
+            onClick={() => setPopupMode("open")}
             className="flex items-center px-3 py-1 hover:bg-[#d0d0d0] cursor-pointer"
           >
             <FaRegFolder />
@@ -265,13 +287,16 @@ export function DocumentHeader(props: { document: Document | undefined; presentU
           </div>
         </div>
       )}
-      {openMode && (
+      {popupMode === "open" && (
         <div
           className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded shadow-lg w-[65%] z-100`}
         >
           <div className="flex justify-between items-center pb-5">
             <div className="font-semibold">Open a file</div>
-            <div onClick={() => setOpenMode(false)} className="cursor-pointer">
+            <div
+              onClick={() => setPopupMode("none")}
+              className="cursor-pointer"
+            >
               <IoCloseOutline size={25} />
             </div>
           </div>
@@ -296,7 +321,10 @@ export function DocumentHeader(props: { document: Document | undefined; presentU
           )}
         </div>
       )}
-      {openMode && (
+      {popupMode === "share" && (
+        <ShareModal document={props.document} setPopupMode={setPopupMode} />
+      )}
+      {popupMode !== "none" && (
         <div className="fixed inset-0 bg-black opacity-50 z-90"></div>
       )}
     </div>
