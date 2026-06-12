@@ -14,8 +14,17 @@ export function ShareModal(props: {
     useUpdateDocumentVisibilityMutation();
   const [showVisibilityMenu, setShowVisibilityMenu] = useState(false);
 
-  function handleSubmit() {
-    if (updateVisibilityPending) return;
+  function handleSubmit(visibility: string) {
+    if (updateVisibilityPending || !props.document) return;
+    if (visibility === props.document.visibility)
+      return setShowVisibilityMenu(false);
+    updateVisibility(
+      {
+        documentId: props.document.documentId,
+        visibility: visibility,
+      },
+      { onSuccess: () => setShowVisibilityMenu(false) },
+    );
   }
 
   return (
@@ -35,18 +44,40 @@ export function ShareModal(props: {
       </div>
       <div className="font-semibold">General access</div>
       {props.document && props.document.visibility === "public" ? (
-        <div className="flex items-center py-2 cursor-pointer">
+        <div
+          onClick={() => setShowVisibilityMenu(true)}
+          className="flex items-center py-2 cursor-pointer"
+        >
           <div className="p-3 rounded-full bg-green-200 w-[40px]">
             <MdLockOutline />
           </div>
           <div className="ml-2">Anyone with the link</div>
         </div>
       ) : (
-        <div className="flex items-center py-2 cursor-pointer">
+        <div
+          onClick={() => setShowVisibilityMenu(true)}
+          className="flex items-center py-2 cursor-pointer"
+        >
           <div className="p-3 rounded-full bg-[#d0d0d0] w-[40px]">
             <IoEarth />
           </div>
           <div className="ml-2">Restricted</div>
+        </div>
+      )}
+      {showVisibilityMenu && (
+        <div className="absolute bottom-4 left-15 bg-white rounded shadow-black shadow-lg">
+          <div
+            onClick={() => handleSubmit("private")}
+            className="px-6 pt-3 pb-1 cursor-pointer"
+          >
+            Restricted
+          </div>
+          <div
+            onClick={() => handleSubmit("public")}
+            className="px-6 pb-3 pt-1 cursor-pointer"
+          >
+            Anyone with the link
+          </div>
         </div>
       )}
       <div className="flex justify-between items-center mt-5">
