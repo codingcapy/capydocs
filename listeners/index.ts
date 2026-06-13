@@ -64,6 +64,29 @@ export function attachListeners(io: Server) {
       socket.to(room).emit("document:user_left", { socketId: socket.id });
     });
 
+    // Allows unauthenticated users to join a document room for live updates
+    socket.on("document:subscribe", (data: { documentId: string }) => {
+      socket.join(`doc:${data.documentId}`);
+    });
+
+    socket.on(
+      "document:content_change",
+      (data: { documentId: string; content: string }) => {
+        const room = `doc:${data.documentId}`;
+        socket.to(room).emit("document:content_change", {
+          content: data.content,
+        });
+      },
+    );
+
+    socket.on(
+      "document:title_change",
+      (data: { documentId: string; title: string }) => {
+        const room = `doc:${data.documentId}`;
+        socket.to(room).emit("document:title_change", { title: data.title });
+      },
+    );
+
     socket.on("disconnect", () => {
       for (const [documentId, users] of documentPresence.entries()) {
         if (users.has(socket.id)) {

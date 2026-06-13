@@ -24,6 +24,7 @@ import { MdLockOutline } from "react-icons/md";
 import { IoEarth } from "react-icons/io5";
 import { IoMdLink } from "react-icons/io";
 import { ShareModal } from "./ShareModal";
+import { socket } from "../services/socket.service";
 
 type MenuMode = "none" | "user" | "file";
 export type PopupMode = "none" | "open" | "share";
@@ -141,6 +142,19 @@ export function DocumentHeader(props: {
     return () => clearTimeout(timeout);
   }, [titleContent]);
 
+  useEffect(() => {
+    if (!props.document || props.document.visibility !== "public") return;
+
+    const handleRemoteTitleChange = ({ title }: { title: string }) => {
+      setTitleContent(title);
+    };
+
+    socket.on("document:title_change", handleRemoteTitleChange);
+    return () => {
+      socket.off("document:title_change", handleRemoteTitleChange);
+    };
+  }, [props.document?.documentId, props.document?.visibility]);
+
   function handleClickOutside(event: MouseEvent) {
     if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
       setMenuMode("none");
@@ -166,7 +180,16 @@ export function DocumentHeader(props: {
             <input
               type="text"
               value={titleContent}
-              onChange={(e) => setTitleContent(e.target.value)}
+              onChange={(e) => {
+                const newTitle = e.target.value;
+                setTitleContent(newTitle);
+                if (props.document?.visibility === "public") {
+                  socket.emit("document:title_change", {
+                    documentId: props.document.path,
+                    title: newTitle,
+                  });
+                }
+              }}
               className="hover:outline-1 focus:outline-1 w-full"
               ref={titleInputRef}
             />

@@ -6,20 +6,26 @@ import { EditorToolbar } from "./EditorToolbar";
 import { useUpdateDocumentContentMutation } from "../lib/api/documents";
 import { useEffect, useRef, useState } from "react";
 import type { Document } from "@server/schemas/documents";
+import { socket } from "../services/socket.service";
 
 export function DocEditor(props: { document: Document | undefined }) {
   const {
     mutate: updateDocumentContent,
     isPending: updateDocumentContentPending,
-    error: updateDocumentContentError,
   } = useUpdateDocumentContentMutation();
   const isFirstRender = useRef(true);
+  const isRemoteUpdate = useRef(false);
   const [documentContent, setDocumentContent] = useState("");
+  const documentRef = useRef(props.document);
+
+  useEffect(() => {
+    documentRef.current = props.document;
+  }, [props.document]);
 
   function handleSubmitUpdateContent() {
-    if (updateDocumentContentPending || !props.document) return;
+    if (updateDocumentContentPending || !documentRef.current) return;
     updateDocumentContent({
-      documentId: props.document.documentId,
+      documentId: documentRef.current.documentId,
       content: documentContent,
     });
   }
@@ -43,7 +49,15 @@ export function DocEditor(props: { document: Document | undefined }) {
     ],
     content: "<p></p>",
     onUpdate: ({ editor }) => {
-      setDocumentContent(editor.getHTML());
+      if (isRemoteUpdate.current) return;
+      const html = editor.getHTML();
+      setDocumentContent(html);
+      if (documentRef.current?.visibility === "public") {
+        socket.emit("document:content_change", {
+          documentId: documentRef.current.path,
+          content: html,
+        });
+      }
     },
     editorProps: {
       attributes: {
@@ -58,6 +72,29 @@ export function DocEditor(props: { document: Document | undefined }) {
       editor.commands.setContent(props.document.content || "<p></p>");
     }
   }, [editor, props.document?.documentId]);
+
+  // Join the document room for live updates — works for both authed and anon users
+  useEffect(() => {
+    if (!props.document || props.document.visibility !== "public") return;
+    if (!socket.connected) socket.connect();
+    socket.emit("document:subscribe", { documentId: props.document.path });
+  }, [props.document?.documentId, props.document?.visibility]);
+
+  useEffect(() => {
+    if (!props.document || props.document.visibility !== "public") return;
+
+    const handleRemoteContentChange = ({ content }: { content: string }) => {
+      if (!editor) return;
+      isRemoteUpdate.current = true;
+      editor.commands.setContent(content);
+      isRemoteUpdate.current = false;
+    };
+
+    socket.on("document:content_change", handleRemoteContentChange);
+    return () => {
+      socket.off("document:content_change", handleRemoteContentChange);
+    };
+  }, [props.document?.documentId, props.document?.visibility, editor]);
 
   return (
     <div className="flex flex-col h-full">
